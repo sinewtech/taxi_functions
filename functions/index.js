@@ -356,6 +356,56 @@ exports.download_url_generator = functions.storage
       return true;
     });
   });
+exports.update_download_url = functions.pubsub
+  .schedule("every 192 hours")
+  .onRun(context => {
+    return admin
+      .firestore()
+      .collection("drivers")
+      .get()
+      .then(function(querySnapshot) {
+        querySnapshot.forEach(async function(doc) {
+          const bucket = admin.storage().bucket();
+          let lateralcar = bucket.file("images/" + doc.id + "/" + "lateralcar");
+          let profile = bucket.file("images/" + doc.id + "/" + "profile");
+          let profilecar = bucket.file("images/" + doc.id + "/" + "profilecar");
+          const options = {
+            action: "read",
+            expires: "12-31-2420"
+          };
+          await lateralcar.getSignedUrl(options).then(results => {
+            const url = results[0];
+            let update;
+            update = { lateralcar: url };
+            admin
+              .firestore()
+              .collection("drivers")
+              .doc(doc.id)
+              .update(update);
+          });
+          await profile.getSignedUrl(options).then(results => {
+            const url = results[0];
+            let update;
+            update = { profile: url };
+            admin
+              .firestore()
+              .collection("drivers")
+              .doc(doc.id)
+              .update(update);
+          });
+          await profilecar.getSignedUrl(options).then(results => {
+            const url = results[0];
+            let update;
+            update = { profilecar: url };
+            admin
+              .firestore()
+              .collection("drivers")
+              .doc(doc.id)
+              .update(update);
+          });
+        });
+      });
+  });
 
 exports.massive_notifications = functions.firestore
   .document("Ads/{uid}")
