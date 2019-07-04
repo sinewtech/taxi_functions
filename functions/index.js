@@ -226,8 +226,13 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
               messages.push({
                 to: token,
                 sound: "default",
-                title: "Hola " + data.firstName + " Podrias contarnos sobre tu ultima orden",
-                body: "Podrias ayudarnos con esta encuesta sobre " + driverdata.firstName,
+                title: "¿Que tal estuvo tu viaje?",
+                body:
+                  "Hola " +
+                  data.firstName +
+                  ", ¿Podrias ayudarnos calificando a " +
+                  driverdata.firstName +
+                  ", tu ultimo conductor?",
                 data: {
                   id: 3,
                   orderdata: {
