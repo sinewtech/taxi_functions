@@ -112,10 +112,10 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
   let dataAfter = snapshot.after.exportVal();
 
   if (
-    dataAfter.status == consts.QUOTE_STATUS_PRICE_ACCEPTED &&
-    dataBefore.status != consts.QUOTE_STATUS_PRICE_ACCEPTED
+    dataAfter.status === consts.QUOTE_STATUS_PRICE_ACCEPTED &&
+    dataBefore.status !== consts.QUOTE_STATUS_PRICE_ACCEPTED
   ) {
-    console.log("Nueva orden confirmada");
+    console.log("Nueva orden confirmada, estatus", dataAfter.status);
     return admin
       .firestore()
       .collection("drivers")
@@ -137,6 +137,7 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
             body: "El cliente ha aceptado el precio propuesto.",
             data: {
               id: 3,
+              order: { uid: snapshot.after.key },
             },
             channelId: "carreras",
           });
@@ -155,7 +156,7 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
       })
       .catch(e => console.error(e));
   } else if (dataAfter.status === consts.QUOTE_STATUS_WAITING_CLIENT) {
-    console.log("Notificando llegada");
+    console.log("Notificando llegada status", dataAfter.status);
 
     return admin
       .firestore()
@@ -185,6 +186,7 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
                 body: driverdata.firstName + " te espera en un auto con placa " + driverdata.plate,
                 data: {
                   id: 2,
+                  order: { uid: snapshot.after.key },
                 },
               });
             });
@@ -202,6 +204,7 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
           });
       });
   } else if (dataAfter.status === consts.QUOTE_STATUS_FINISHED) {
+    console.log("Notificacion rating, estatus", dataAfter.status);
     return admin
       .firestore()
       .collection("clients")
