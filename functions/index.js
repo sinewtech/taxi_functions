@@ -107,11 +107,14 @@ exports.custom_marker_reference = functions.database
     return true;
   });
 
-exports.confirm_quote = functions.database.ref("quotes/{uid}").onUpdate(snapshot => {
+exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snapshot => {
   let dataBefore = snapshot.before.exportVal();
   let dataAfter = snapshot.after.exportVal();
 
-  if (dataAfter.status == 2 && dataBefore.status != 2) {
+  if (
+    dataAfter.status == consts.QUOTE_STATUS_PRICE_ACCEPTED &&
+    dataBefore.status != consts.QUOTE_STATUS_PRICE_ACCEPTED
+  ) {
     console.log("Nueva orden confirmada");
     return admin
       .firestore()
@@ -151,13 +154,13 @@ exports.confirm_quote = functions.database.ref("quotes/{uid}").onUpdate(snapshot
         });
       })
       .catch(e => console.error(e));
-  } else if (dataAfter.status === 5) {
+  } else if (dataAfter.status === consts.QUOTE_STATUS_WAITING_CLIENT) {
     console.log("Notificando llegada");
 
     return admin
       .firestore()
       .collection("clients")
-      .doc(dataAfter.userUID)
+      .doc(dataAfter.userUid)
       .get()
       .then(snap => {
         let data = snap.data();
@@ -182,6 +185,52 @@ exports.confirm_quote = functions.database.ref("quotes/{uid}").onUpdate(snapshot
                 body: driverdata.firstName + " te espera en un auto con placa " + driverdata.plate,
                 data: {
                   id: 2,
+                },
+              });
+            });
+
+            fetch("https://exp.host/--/api/v2/push/send", {
+              method: "POST",
+              mode: "no-cors",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+              },
+              body: JSON.stringify(messages),
+            });
+          });
+      });
+  } else if (dataAfter.status === consts.QUOTE_STATUS_FINISHED) {
+    return admin
+      .firestore()
+      .collection("clients")
+      .doc(dataAfter.userUid)
+      .get()
+      .then(snap => {
+        let data = snap.data();
+        let pushTokens = data["pushDevices"];
+
+        let messages = [];
+        admin
+          .firestore()
+          .collection("drivers")
+          .doc(dataAfter.driver)
+          .get()
+          .then(snap => {
+            let driverdata = snap.data();
+            pushTokens.forEach(token => {
+              messages.push({
+                to: token,
+                sound: "default",
+                title: "Hola " + data.firstName + " Podrias contarnos sobre tu ultima orden",
+                body: "Podrias ayudarnos con esta encuesta sobre " + driverdata.firstName,
+                data: {
+                  id: 3,
+                  orderdata: {
+                    driverName: driverdata.firstName,
+                    orderUid: snapshot.after.key,
+                  },
                 },
               });
             });
