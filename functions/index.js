@@ -2,6 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const express = require("express");
 const fetch = require("node-fetch");
+const consts = require("./Constants");
 const API_KEY = "AIzaSyApNgtxFBp0SXSHljP_xku6peNCzjTFWM4";
 const REFERENCE_RADIUS = 100;
 const location = express();
