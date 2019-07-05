@@ -255,6 +255,41 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
             });
           });
       });
+  } else if (dataAfter.status === consts.QUOTE_STATUS_CLIENT_CANCELED) {
+    return admin
+      .firestore()
+      .collection("drivers")
+      .doc(dataAfter.driver)
+      .get()
+      .then(snap => {
+        let data = snap.data();
+        let pushTokens = data["pushDevices"];
+
+        let messages = [];
+        let driverdata = snap.data();
+        pushTokens.forEach(token => {
+          messages.push({
+            to: token,
+            sound: "default",
+            title: "Informacion del cliente",
+            body: "Lo sentimos, el cliente ha cancelado la carrera",
+            data: {
+              id: 4,
+            },
+          });
+        });
+
+        fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+          body: JSON.stringify(messages),
+        });
+      });
   }
 });
 
