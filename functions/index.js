@@ -183,7 +183,7 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
                 to: token,
                 sound: "default",
                 title: "Tu taxi está aquí",
-                body: driverdata.firstName + " te espera en un auto con placa " + driverdata.plate,
+                body: driverdata.firstName + " te espera en un " + driverdata.description + " con placa " + driverdata.plate,
                 data: {
                   id: 2,
                   order: { uid: snapshot.after.key },
