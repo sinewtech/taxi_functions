@@ -183,7 +183,12 @@ exports.changes_on_quote = functions.database.ref("quotes/{uid}").onUpdate(snaps
                 to: token,
                 sound: "default",
                 title: "Tu taxi está aquí",
-                body: driverdata.firstName + " te espera en un " + driverdata.description + " con placa " + driverdata.plate,
+                body:
+                  driverdata.firstName +
+                  " te espera en un " +
+                  driverdata.description +
+                  " con placa " +
+                  driverdata.plate,
                 data: {
                   id: 2,
                   order: { uid: snapshot.after.key },
@@ -478,4 +483,42 @@ exports.update_download_url = functions.pubsub.schedule("every 192 hours").onRun
         });
       });
     });
+});
+
+exports.delete_user_data = functions.auth.user().onDelete(user => {
+  const bucket = admin.storage().bucket();
+  let folder = bucket.file("images/" + user.uid);
+  let isDriver = folder.exists();
+  if (isDriver) {
+    return firebase
+      .firestore()
+      .collection("drivers")
+      .doc(user.uid)
+      .delete()
+      .then(() => {
+        firebase
+          .database()
+          .ref()
+          .child("locations/" + user.uid)
+          .remove()
+          .then(() => {
+            folder.delete();
+          });
+      })
+      .catch(() => {
+        return false;
+      });
+  } else {
+    return firebase
+      .firestore()
+      .collection("clients")
+      .doc(user.uid)
+      .delete()
+      .then(() => {
+        return true;
+      })
+      .catch(() => {
+        return false;
+      });
+  }
 });
