@@ -490,13 +490,13 @@ exports.delete_user_data = functions.auth.user().onDelete(user => {
   let folder = bucket.file("images/" + user.uid);
   let isDriver = folder.exists();
   if (isDriver) {
-    return firebase
+    return admin
       .firestore()
       .collection("drivers")
       .doc(user.uid)
       .delete()
       .then(() => {
-        firebase
+        admin
           .database()
           .ref()
           .child("locations/" + user.uid)
@@ -509,7 +509,7 @@ exports.delete_user_data = functions.auth.user().onDelete(user => {
         return false;
       });
   } else {
-    return firebase
+    return admin
       .firestore()
       .collection("clients")
       .doc(user.uid)
