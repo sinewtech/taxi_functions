@@ -35,6 +35,37 @@ exports.custom_marker_reference = functions.database
   .ref("quotes/{uid}")
   .onCreate((snapshot, context) => {
     let data = snapshot.exportVal();
+
+    if (data.userUid) {
+      let docRef = admin.firestore().collection("clients").doc(data.userUid);
+
+      docRef
+        .get()
+        .then(doc => {
+          if (doc.exists) {
+            let userData = doc.data();
+
+            var updates = {};
+            updates["/quotes/" + context.params.uid + "/userName"] =
+              userData.firstName + " " + userData.lastName;
+            updates["/quotes/" + context.params.uid + "/userPhone"] =
+              userData.phone;
+
+            admin
+              .database()
+              .ref()
+              .update(updates);
+          } else {
+            // doc.data() will be undefined in this case
+            console.log("No se encontró al cliente de la orden.");
+          }
+        })
+        .catch(function(error) {
+          console.log("Error recuperando el documento del cliente de orden nueva", error);
+        });
+
+    }
+    
     if (data.destination.name == "Marcador") {
       let query =
         "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" +
