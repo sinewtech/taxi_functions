@@ -483,21 +483,6 @@ exports.update_download_url = functions.pubsub.schedule("every 192 hours").onRun
           action: "read",
           expires: "12-31-2420",
         };
-        await lateralcar
-          .getSignedUrl(options)
-          .then(results => {
-            const url = results[0];
-            let update;
-            update = { lateralcar: url };
-            admin
-              .firestore()
-              .collection("drivers")
-              .doc(doc.id)
-              .update(update);
-          })
-          .catch(error => {
-            console.log("lateralcar", error);
-          });
         await profile
           .getSignedUrl(options)
           .then(results => {
@@ -509,24 +494,39 @@ exports.update_download_url = functions.pubsub.schedule("every 192 hours").onRun
               .collection("drivers")
               .doc(doc.id)
               .update(update);
+            lateralcar
+              .getSignedUrl(options)
+              .then(results => {
+                const url = results[0];
+                let update;
+                update = { lateralcar: url };
+                admin
+                  .firestore()
+                  .collection("drivers")
+                  .doc(doc.id)
+                  .update(update);
+                profilecar
+                  .getSignedUrl(options)
+                  .then(results => {
+                    const url = results[0];
+                    let update;
+                    update = { profilecar: url };
+                    admin
+                      .firestore()
+                      .collection("drivers")
+                      .doc(doc.id)
+                      .update(update);
+                  })
+                  .catch(error => {
+                    console.log("profilecar", error);
+                  });
+              })
+              .catch(error => {
+                console.log("lateralcar", error);
+              });
           })
           .catch(error => {
             console.log("profile", error);
-          });
-        await profilecar
-          .getSignedUrl(options)
-          .then(results => {
-            const url = results[0];
-            let update;
-            update = { profilecar: url };
-            admin
-              .firestore()
-              .collection("drivers")
-              .doc(doc.id)
-              .update(update);
-          })
-          .catch(error => {
-            console.log("profilecar", error);
           });
       });
     });
