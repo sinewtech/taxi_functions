@@ -37,7 +37,10 @@ exports.custom_marker_reference = functions.database
     let data = snapshot.exportVal();
 
     if (data.userUid) {
-      let docRef = admin.firestore().collection("clients").doc(data.userUid);
+      let docRef = admin
+        .firestore()
+        .collection("clients")
+        .doc(data.userUid);
 
       docRef
         .get()
@@ -48,8 +51,7 @@ exports.custom_marker_reference = functions.database
             var updates = {};
             updates["/quotes/" + context.params.uid + "/userName"] =
               userData.firstName + " " + userData.lastName;
-            updates["/quotes/" + context.params.uid + "/userPhone"] =
-              userData.phone;
+            updates["/quotes/" + context.params.uid + "/userPhone"] = userData.phone;
 
             admin
               .database()
@@ -63,9 +65,8 @@ exports.custom_marker_reference = functions.database
         .catch(function(error) {
           console.log("Error recuperando el documento del cliente de orden nueva", error);
         });
-
     }
-    
+
     if (data.destination.name == "Marcador") {
       let query =
         "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" +
@@ -482,36 +483,51 @@ exports.update_download_url = functions.pubsub.schedule("every 192 hours").onRun
           action: "read",
           expires: "12-31-2420",
         };
-        await lateralcar.getSignedUrl(options).then(results => {
-          const url = results[0];
-          let update;
-          update = { lateralcar: url };
-          admin
-            .firestore()
-            .collection("drivers")
-            .doc(doc.id)
-            .update(update);
-        });
-        await profile.getSignedUrl(options).then(results => {
-          const url = results[0];
-          let update;
-          update = { profile: url };
-          admin
-            .firestore()
-            .collection("drivers")
-            .doc(doc.id)
-            .update(update);
-        });
-        await profilecar.getSignedUrl(options).then(results => {
-          const url = results[0];
-          let update;
-          update = { profilecar: url };
-          admin
-            .firestore()
-            .collection("drivers")
-            .doc(doc.id)
-            .update(update);
-        });
+        await lateralcar
+          .getSignedUrl(options)
+          .then(results => {
+            const url = results[0];
+            let update;
+            update = { lateralcar: url };
+            admin
+              .firestore()
+              .collection("drivers")
+              .doc(doc.id)
+              .update(update);
+          })
+          .catch(error => {
+            console.log("lateralcar", error);
+          });
+        await profile
+          .getSignedUrl(options)
+          .then(results => {
+            const url = results[0];
+            let update;
+            update = { profile: url };
+            admin
+              .firestore()
+              .collection("drivers")
+              .doc(doc.id)
+              .update(update);
+          })
+          .catch(error => {
+            console.log("profile", error);
+          });
+        await profilecar
+          .getSignedUrl(options)
+          .then(results => {
+            const url = results[0];
+            let update;
+            update = { profilecar: url };
+            admin
+              .firestore()
+              .collection("drivers")
+              .doc(doc.id)
+              .update(update);
+          })
+          .catch(error => {
+            console.log("profilecar", error);
+          });
       });
     });
 });
