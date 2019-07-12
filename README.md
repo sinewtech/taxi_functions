@@ -77,3 +77,6 @@ Inspirado en [dannyfritz/commit-message-emoji](https://github.com/dannyfritz/com
 | Accessibility            | :wheelchair: `:wheelchair:`                               |
 | Move/rename repository   | :truck: `:truck:`                                         |
 | Other                    | [Be creative](http://www.emoji-cheat-sheet.com/)          |
+
+
+Prueba
