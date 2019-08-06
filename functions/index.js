@@ -569,3 +569,103 @@ exports.delete_user_data = functions.auth.user().onDelete(user => {
       });
   }
 });
+
+const update_http = express();
+update_http.use(bodyParser());
+update_http.use(bodyParser.urlencoded({ extended: true }));
+update_http.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
+update_http.post("/", (req, res) => {
+  admin
+    .firestore()
+    .collection("drivers")
+    .get()
+    .then(function(querySnapshot) {
+      querySnapshot.forEach(async function(doc) {
+        console.log("estoy editando a ", doc.id, "con el tipo: ", req.body.type);
+        const bucket = admin.storage().bucket();
+        let lateralcar = bucket.file("images/" + doc.id + "/" + "lateralcar");
+        let profile = bucket.file("images/" + doc.id + "/" + "profile");
+        let profilecar = bucket.file("images/" + doc.id + "/" + "profilecar");
+        const options = {
+          action: "read",
+          expires: "12-31-2420",
+        };
+        if (req.body.type === 0) {
+          await profile
+            .getSignedUrl(options)
+            .then(results => {
+              const url = results[0];
+              let update;
+              update = { profile: url };
+              admin
+                .firestore()
+                .collection("drivers")
+                .doc(doc.id)
+                .update(update)
+                .then(value => {
+                  console.log("ya tiene foto de perfil ", doc.id);
+                })
+                .catch(error => {
+                  console.log("error en perfil", doc.id, error);
+                });
+            })
+            .catch(error => {
+              console.log("error al crear url en profile", error);
+            });
+        } else if (req.body.type === 1) {
+          lateralcar
+            .getSignedUrl(options)
+            .then(results => {
+              const url = results[0];
+              let update;
+              update = { lateralcar: url };
+              admin
+                .firestore()
+                .collection("drivers")
+                .doc(doc.id)
+                .update(update)
+                .then(value => {
+                  console.log("ya tiene foto lateral ", doc.id);
+                })
+                .catch(error => {
+                  console.log("error en lateral", doc.id, error);
+                });
+            })
+            .catch(error => {
+              console.log("error al crear url en lateral", error);
+            });
+        } else if (req.body.type === 2) {
+          profilecar
+            .getSignedUrl(options)
+            .then(results => {
+              const url = results[0];
+              let update;
+              update = { profilecar: url };
+              admin
+                .firestore()
+                .collection("drivers")
+                .doc(doc.id)
+                .update(update)
+                .then(value => {
+                  console.log("ya tiene foto de perfil de carro ", doc.id);
+                })
+                .catch(error => {
+                  console.log("error en perfil de carro", doc.id, error);
+                });
+            })
+            .catch(error => {
+              console.log("error al crear url en profilecar", error);
+            });
+        }
+      });
+      res.send("Listo estan subiendose");
+    });
+});
+
+exports.update_http = functions.https.onRequest(update_http);
